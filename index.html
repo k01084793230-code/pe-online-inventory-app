@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#315edb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="PE 재고관리">
+  <link rel="apple-touch-icon" href="app-icon.png">
+  <link rel="icon" href="app-icon.png">
+  <title>PE 온라인 판매 재고관리</title>
+  <style>
+    :root{--p:#315edb;--p2:#eaf0ff;--ink:#172033;--muted:#70788a;--line:#e2e7f0;--bg:#f5f7fb;--ok:#23875b;--warn:#d64545}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:Pretendard,"Noto Sans KR",Arial,sans-serif}
+    button,input,select,textarea{font:inherit} button{cursor:pointer}
+    .app{max-width:1040px;margin:auto;min-height:100vh;padding:24px 22px 92px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:22px}
+    .brand{display:flex;align-items:center;gap:12px}.logo{display:block;width:48px;height:48px;border-radius:15px;object-fit:cover;box-shadow:0 7px 18px #315edb33}
+    h1{font-size:21px;margin:0}.sub{font-size:12px;color:var(--muted);margin-top:4px}
+    .refresh{border:1px solid var(--line);background:white;border-radius:12px;padding:10px 14px;color:var(--p);font-weight:800}
+    .summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+    .metric{background:white;border:1px solid var(--line);border-radius:18px;padding:17px;box-shadow:0 5px 18px #3324500a}
+    .metric span{font-size:12px;color:var(--muted)}.metric strong{display:block;font-size:25px;margin-top:7px}.metric.warn strong{color:var(--warn)}
+    .tabs{display:flex;gap:8px;background:#ebe7ef;border-radius:15px;padding:5px;margin-bottom:18px;position:sticky;top:8px;z-index:4}
+    .tab{flex:1;border:0;background:transparent;border-radius:11px;padding:11px 8px;font-weight:800;color:var(--muted)}.tab.active{background:white;color:var(--p);box-shadow:0 3px 10px #33245014}
+    .panel{display:none}.panel.active{display:block}
+    .toolbar{display:flex;gap:9px;margin-bottom:12px}.search{flex:1;border:1px solid var(--line);background:white;border-radius:13px;padding:12px 14px;outline:none}.search:focus{border-color:var(--p)}
+    .filter{border:1px solid var(--line);background:white;border-radius:13px;padding:0 12px}
+    .table-card,.form-card{background:white;border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:0 5px 18px #3324500a}
+    table{width:100%;border-collapse:collapse}th{background:#f0ebf7;color:#5d4a79;font-size:12px;text-align:center;padding:13px 10px}td{padding:14px 10px;border-top:1px solid var(--line);text-align:center;font-size:14px}td.name{text-align:left;font-weight:750}.stock{font-weight:900}.low{color:var(--warn)}
+    .badge{display:inline-block;padding:5px 8px;border-radius:999px;background:#e4f5ec;color:var(--ok);font-size:11px;font-weight:800}.badge.low{background:#ffe7e7;color:var(--warn)}
+    .form-card{padding:22px;max-width:650px;margin:auto}.form-card h2{margin:0 0 5px;font-size:20px}.hint{color:var(--muted);font-size:13px;margin:0 0 20px}
+    label{display:block;font-size:13px;font-weight:800;margin:15px 0 7px}.field{width:100%;border:1px solid var(--line);border-radius:13px;padding:13px;background:#fff;outline:none}.field:focus{border-color:var(--p);box-shadow:0 0 0 3px #6750a414}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.qty{display:flex;align-items:center;border:1px solid var(--line);border-radius:13px;overflow:hidden}.qty button{width:46px;align-self:stretch;border:0;background:var(--p2);font-size:22px;color:var(--p)}.qty input{width:100%;border:0;text-align:center;padding:12px;outline:none;font-weight:800}
+    .primary{width:100%;border:0;border-radius:14px;background:var(--p);color:#fff;font-weight:900;padding:14px;margin-top:22px}.primary:disabled{opacity:.5;cursor:wait}
+    .history{display:grid;gap:10px}.history-item{display:grid;grid-template-columns:1fr auto;gap:5px;background:white;border:1px solid var(--line);border-radius:15px;padding:15px}.history-item strong{font-size:14px}.history-item time,.history-item small{color:var(--muted);font-size:12px}.history-item b{grid-row:1/3;grid-column:2;align-self:center;color:var(--p)}
+    .empty{text-align:center;color:var(--muted);background:white;border:1px dashed var(--line);border-radius:18px;padding:42px 18px}.loading{padding:40px;text-align:center;color:var(--muted)}
+    .toast{position:fixed;left:50%;bottom:25px;transform:translate(-50%,30px);background:#242126;color:white;border-radius:12px;padding:12px 18px;opacity:0;pointer-events:none;transition:.25s;z-index:20;white-space:nowrap}.toast.show{opacity:1;transform:translate(-50%,0)}
+    @media(max-width:650px){.app{padding:18px 14px 88px}h1{font-size:18px}.summary{gap:8px}.metric{padding:14px 12px}.metric strong{font-size:21px}.row{grid-template-columns:1fr}.table-card{background:transparent;border:0;box-shadow:none}table,tbody{display:block}thead{display:none}tr{display:grid;grid-template-columns:1fr auto auto;background:white;border:1px solid var(--line);border-radius:15px;margin-bottom:9px;padding:12px}td{border:0;padding:3px 7px;font-size:12px}td.name{grid-column:1/4;font-size:14px;padding-bottom:9px}td:nth-child(2)::before{content:'제작 ';color:var(--muted)}td:nth-child(3)::before{content:'판매 ';color:var(--muted)}td:nth-child(4)::before{content:'재고 ';color:var(--muted)}td:nth-child(5){grid-column:1/4;text-align:right}.toolbar{flex-direction:column}.filter{padding:11px}}
+  </style>
+</head>
+<body>
+<main class="app">
+  <header><div class="brand"><img class="logo" src="app-icon.png" alt="온라인 판매 재고관리 로고"><div><h1>온라인 판매 재고관리</h1><div class="sub" id="updated">구글시트 연결 중</div></div></div><button class="refresh" id="refresh">새로고침</button></header>
+  <section class="summary"><div class="metric"><span>등록 상품</span><strong id="productCount">-</strong></div><div class="metric"><span>총 재고</span><strong id="totalStock">-</strong></div><div class="metric warn"><span>안전재고 이하</span><strong id="lowCount">-</strong></div></section>
+  <nav class="tabs" aria-label="메뉴"><button class="tab active" data-tab="inventory">재고현황</button><button class="tab" data-tab="sale">판매등록</button><button class="tab" data-tab="history">판매내역</button></nav>
+
+  <section class="panel active" id="inventory"><div class="toolbar"><input class="search" id="search" placeholder="제품명 검색"><select class="filter" id="filter"><option value="all">전체 재고</option><option value="low">안전재고 이하</option></select></div><div class="table-card"><div class="loading" id="inventoryLoading">재고를 불러오는 중입니다</div><table id="inventoryTable" hidden><thead><tr><th>제품명</th><th>제작</th><th>판매</th><th>현재 재고</th><th>상태</th></tr></thead><tbody id="inventoryBody"></tbody></table></div></section>
+
+  <section class="panel" id="sale"><form class="form-card" id="saleForm"><h2>판매 등록</h2><p class="hint">판매 수량을 등록하면 상품 재고와 판매내역에 반영됩니다.</p><label for="saleDate">판매일</label><input class="field" type="date" id="saleDate" required><label for="product">제품</label><select class="field" id="product" required><option value="">제품을 선택하세요</option></select><div class="row"><div><label for="channel">판매처</label><select class="field" id="channel"><option>쿠팡</option><option>네이버 스마트스토어</option><option>전화 주문</option><option>기타</option></select></div><div><label for="quantity">판매수량</label><div class="qty"><button type="button" data-step="-1">−</button><input id="quantity" type="number" min="1" value="1" required><button type="button" data-step="1">＋</button></div></div></div><label for="note">비고</label><textarea class="field" id="note" rows="3" placeholder="필요한 내용이 있을 때만 입력"></textarea><button class="primary" id="saleSubmit">판매 등록하기</button></form></section>
+
+  <section class="panel" id="history"><div class="history" id="historyList"><div class="empty">등록된 판매내역이 없습니다.</div></div></section>
+</main><div class="toast" id="toast"></div>
+<script>
+const API='https://script.google.com/macros/s/AKfycbwmlaSve9tLcpRCitEUnF3x6l_91U9rTUYKO_tCbcjqfqTc_MwyctI43MBx6-gFfjzRqg/exec';
+let products=[],sales=[];
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+const num=v=>Number(v||0).toLocaleString('ko-KR');
+function toast(msg){const el=$('#toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2400)}
+async function api(payload){
+  if(!payload){const r=await fetch(API,{cache:'no-store'});return r.json()}
+  const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload),redirect:'follow'});
+  return r.json();
+}
+async function load(){
+  $('#refresh').disabled=true;
+  try{const data=await api();if(!data.success)throw new Error(data.message||'데이터 오류');products=data.products||[];sales=data.sales||[];renderAll();$('#updated').textContent='마지막 동기화 '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}
+  catch(e){$('#inventoryLoading').textContent='데이터를 불러오지 못했습니다. 새로고침해주세요.';toast('연결을 다시 확인해주세요')}
+  finally{$('#refresh').disabled=false}
+}
+function renderAll(){
+  $('#productCount').textContent=num(products.length);$('#totalStock').textContent=num(products.reduce((s,p)=>s+Number(p.stock||0),0));$('#lowCount').textContent=num(products.filter(p=>Number(p.stock)<=Number(p.safetyStock)).length);
+  const selected=$('#product').value;$('#product').innerHTML='<option value="">제품을 선택하세요</option>'+products.map(p=>`<option value="${p.id}">${p.name} (재고 ${num(p.stock)})</option>`).join('');$('#product').value=selected;
+  renderInventory();renderHistory();
+}
+function renderInventory(){
+  const q=$('#search').value.trim().toLowerCase(), f=$('#filter').value;
+  const list=products.filter(p=>(!q||p.name.toLowerCase().includes(q))&&(f!=='low'||Number(p.stock)<=Number(p.safetyStock)));
+  $('#inventoryLoading').hidden=true;$('#inventoryTable').hidden=false;
+  $('#inventoryBody').innerHTML=list.length?list.map(p=>{const low=Number(p.stock)<=Number(p.safetyStock);return `<tr><td class="name">${p.name}</td><td>${num(p.made)}</td><td>${num(p.sold)}</td><td class="stock ${low?'low':''}">${num(p.stock)}</td><td><span class="badge ${low?'low':''}">${low?'재고주의':'정상'}</span></td></tr>`}).join(''):'<tr><td colspan="5">조건에 맞는 제품이 없습니다.</td></tr>';
+}
+function renderHistory(){
+  $('#historyList').innerHTML=sales.length?sales.slice().reverse().slice(0,50).map(s=>`<article class="history-item"><strong>${s.name||s.productName||'제품'}</strong><time>${s.saleDate||s.date||''} · ${s.channel||s.salesChannel||s.store||''}</time><b>−${num(s.quantity||s.qty)}개</b></article>`).join(''):'<div class="empty">등록된 판매내역이 없습니다.</div>';
+}
+$$('.tab').forEach(b=>b.addEventListener('click',()=>{$$('.tab,.panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('#'+b.dataset.tab).classList.add('active')}));
+$('#search').addEventListener('input',renderInventory);$('#filter').addEventListener('change',renderInventory);$('#refresh').addEventListener('click',load);
+$$('[data-step]').forEach(b=>b.addEventListener('click',()=>{$('#quantity').value=Math.max(1,Number($('#quantity').value||1)+Number(b.dataset.step))}));
+$('#saleForm').addEventListener('submit',async e=>{
+  e.preventDefault();const id=Number($('#product').value), product=products.find(p=>Number(p.id)===id), quantity=Number($('#quantity').value);
+  if(!product)return toast('제품을 선택해주세요');if(quantity<1)return toast('판매수량을 확인해주세요');if(quantity>Number(product.stock))return toast('현재 재고보다 많이 등록할 수 없습니다');
+  const btn=$('#saleSubmit');btn.disabled=true;btn.textContent='등록 중...';
+  try{const channel=$('#channel').value,note=$('#note').value.trim(),saleDate=$('#saleDate').value;const data=await api({action:'addSale',productId:id,id:id,productName:product.name,name:product.name,quantity:quantity,qty:quantity,saleDate:saleDate,date:saleDate,channel:channel,salesChannel:channel,salePlace:channel,note:note});if(!data.success)throw new Error(data.message||'등록 실패');toast('판매가 등록되었습니다');$('#quantity').value=1;$('#note').value='';await load();$$('.tab')[0].click()}
+  catch(err){toast(err.message||'등록 중 오류가 발생했습니다')}
+  finally{btn.disabled=false;btn.textContent='판매 등록하기'}
+});
+$('#saleDate').value=new Date().toISOString().slice(0,10);load();
+</script>
+</body>
+</html>
